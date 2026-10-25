@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AASIS // Mission Control</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+    /* 1. Global Viewpoint & Ambient Background Grid Pattern */
+    body {
+      background-color: #030712;
+      background-image:
+           radial-gradient(rgba(56, 189, 248, 0.08) 1px, transparent 1px),
+           radial-gradient(rgba(56, 189, 248, 0.04) 1px, transparent 1px);
+       background-size: 32px 32px, 16px 16px;
+       background-position: 0 0, 8px 8px;
+       
+       color: #f3f4f6;
+       font-family: 'JetBrains Mono', monospace;
+       margin: 0;
+       padding: 40px 20px;
+       min-height: 100vh;
+       display: flex;
+       flex-direction: column;
+       justify-content: center;
+       align-items: center;
+       box-sizing: border-box;
+    }
+    /* 2, Interactive Spotlight Background Blur */
+    .cursor-glow {
+        position: absolute;
+        width: 600px;
+        height: 600px;
+        background: radial-gradient(circle, rgba(56, 189, 248, 0.35) 0%, transparent 70%);
+        border-radius: 50%;
+        pointer-events: none; /* Mouse ignores this div so buttons work underneath */
+        transform: translate(-50%, -50%);
+        transition: transform 0.05s linear;
+        z-index: 1;
+    }
+    /* 3. Layout Positioning Container */
+    .dashboard-wrapper {
+        position: relative;
+        z-index: 2; /* Sits cleanly above the moving spotlight background*/
+        width: 90%;
+        max-width: 1200px;
+    }
+
+    .main-header {
+        margin-bottom: 40px;
+        text-align: left;
+        border-left: 4px solid #38bdf8;
+        padding-left: 20px;
+        position: relative;
+    }
+    .main-header h1 {
+        font-size: 2rem;
+        letter-spacing: 3px;
+        margin: 0 0 8px 0;
+        color: #ffffff;
+        text-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+    }
+
+    .main-header h3 {
+        margin: 0;
+        font-size: 1rem;
+        color: #38bdf8;
+        font-weight: 300;
+        letter-spacing: 1px;
+    }
+
+    /* Top Edge Diagnostic Telemetry Bar */
+    body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px; 
+        background: linear-gradient(to right, #38bdf8, #c084fc, #34d399);
+        z-index: 9999;
+        box-shadow: 0 2px 15px rgba(56, 189, 248, 0.5);
+    }
+
+    /* 4. Proffesional Responsive Layout Colmuns */
+    .grid-layout {
+        display: grid;
+        /* THIS MATRIX PATTERN CREATES 4 EQUAL COLLUMNS SIDE BY SIDE */
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        margin-top: 30px;
+        width: 100%;
+    }
+
+    /* This Safeguard automatically stacks cards vertically on mobile screens */
+    @media (max-width: 1100px) {
+        .grid-layout {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    @media (max-width: 700px) {
+        .grid-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+    /*5. Frosted Glassmorphism Panels */
+    .glass-card {
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        border-radius: 14px;
+        padding: 25px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), border-color 0.3s ease;
+        box-sizing: border-box;
+        
+        animation: cockpitEntrance 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        opacity: 0;
+    }
+    .glass-card:hover {
+       transform: translateY(-4px);
+       border-color: rgba(56, 189, 248, 0.4);
+    }
+
+    @keyframes cockpitEntrance {
+        from {
+            opacity: 0;
+            transform: translateY(40px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    /* Modern smooth layout interaction pop */
+    .highlight-cyan { color: #38bdf8; font-weight: bold; }
+    .highlight-green { color: #34d399; }
+    .alert-header { color: #f87171; }
+
+    .control-deck {
+        margin-top: 40px;
+        display: flex;
+        justify-content: center;
+    }
+
+    /* Premium UI Button Action Styles */
+    .action-btn {
+        background: rgba(56, 189, 248, 0.1);
+        color: #38bdf8;
+        border: 1px solid rgba(56, 189, 248, 0.4);
+        padding: 14px 28px;
+        font-family: 'JetBrains Mono', monospace;
+        font-weight: bold;
+        border-radius: 8px;
+        cursor: pointer;
+        letter-spacing: 1px;
+        transition: all 0.2s ease;
+    }
+
+    .action-btn:hover {
+        background: #38bdf8;
+        color: #030712;
+        box-shadow: 0 0 25px rgba(56, 189, 248, 0.4);
+    }
+    /* Pulsing Status Node Light Effect */
+    .status-container {
+       position: relative;
+       display: inline-flex;
+       align-items: center;
+       justify-content: center;
+        width: 12px;
+        height: 12px;
+        margin-right: 10px;
+        vertical-align: middle;
+    }
+
+    /* The Crisp Solid Center Green Core */
+    .status-core {
+        width: 8px;
+        height: 8px;
+        background-color: #34d399;
+        border-radius: 50%;
+        z-index: 3;
+    }
+
+    /* The Smooth Neon Glow Aura Ring 
+    .status-glow-halo {
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    background: radial-gradient(circle, rgba(52, 211, 153, 0.65) 0%, transparent 70%);
+    border-radius: 50%;
+    z-index: 2;
+    animation: beaconBreath 2.5s infinite ease-in-out;
+    pointer-events: none;
+}
+
+    @keyframes beaconBreath {
+        0%, 100% {
+            transform: scale(0.75);
+            opacity: 0.35;
+        }
+      50% {
+           transform: scale(1.35);
+           opacity: 0.95;
+
+           }        
+
+        }
+    50% {
+        transform: translate(-50%, -50%) scale(1.3);
+        box-shadow: 0 0 16px #34d399;
+        opacity: 1;
+         }
+    }
+         /* Telemetry Diagnostics Progress Fill Animation */
+         .hud-progress-fill {
+            height: 100%;
+            width: 45%;
+            background: linear-gradient(to right, #38bdf8, #34d399);
+            border-radius: 3px;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+            animation: diagnosticScan 4s infinite ease-in-out;
+         }
+         
+         @keyframes diagnosticScan {
+            0% {
+                transform: translateX(-100%)
+            }
+            50% {
+                transform: TranslateX(130%);
+                width: 65%;
+            }
+            100% {
+                transform: translateX(-100%);
+                width: 45%;
+            }
+         }
+    </style>
+       
+    </head>
+    <body>
+    <div class="cursor-glow" id="mouseGlow"></div>
+
+    <div class="dashboard-wrapper">
+       <header class="main-header">
+         <h1>[ AASIS // INTELLIGENT NAVIGATION ]</h1>
+         <h3 id="ship-clock">MISSION TIME: SYNCING...</h3>
+       </header>
+
+       <main class="grid-layout">
+        <!-- Diagnostics Panel -->
+        <!-- Card 1: System Core Status -->
+         <section class="glass-card" id="systemCard" style="box-shadow: 0 0 20px rgba(56, 189, 248, 0.15); border-color: rgba(56, 189, 248, 0.35);">
+          <h2>SYSTEM CORE STATUS</h2>
+        
+          <p id="ship-status" style="display: flex; align-items: center; margin: 14px 0;">
+          <span style="display: inline-block; width: 8px; height: 8px; background-color: #34d399; border-radius: 50%; margin-right: 12px; box-shadow: 0 0 12px #34d399; flex-shrink: 0;"></span> 
+           Status: Orbiting Earth 
+           </p>
+         
+           <p>Life Support Systems: <span class="highlight-cyan">100%</span></p>
+          <p>AI Core Node Temp: <span class="highlight-cyan">Nominal</span></p>
+
+          <!-- Live Quantum Node Diagnostics Analyzer Bar --->
+          <div style="margin-top: 18px; padding-top: 12px; border-top: 1px dashed rgba(255,255,255,0.1);">
+            <p style="font-size: 0.7rem; color: #6b7280; margin-bottom: 6px; letter-spacing: 1px;">[ CORE DATA ANALYSIS VECTOR ]</p>
+            <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.05);">
+                <div class="hud-progress-fill"></div>
+            </div>
+          </div>
+        </section>
+        
+        <section class="glass-card">
+            <h2> CREW VITALS DETECTED</h2>
+            <p> Commander Stress Index: <span id="vital-stress" class="highlight-cyan">12%</span></p>
+            <p> REM Sleep Variance: <span id="vital-sleep" class="highlight-cyan">8.2 Hours</span></p>
+            <p> Heart Rate State: <span id="vital-heart" class="highlight-green">Optimal</span></p>
+            
+            <!---- Diagnostic Medical Selector Deck ---->
+            <div style="margin-top: 20px; padding-top: 15px; border-top: 1px dashed rgba(255,255,255,0.1)">
+                <p style="font-size: 0.75rem; color: #6b7280; margin-bottom: 8px;">[ SIMULATE COMBAT EXERTION ]</p>
+                <div style= "display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button onclick="setVitalState('12%', '8.2 Hours', 'Optimal', '#34d399'); playTerminalSound('click');" style="background: rgba(56,189,248,0.1); border: 1px solid rgba(56,189,248,0.3); color: #38bdf8; font-size: 0.7rem; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-family: 'JetBrains Mono';">REST STATE</button>
+                    <button onclick="setVitalState('78%', '4.1 Hours', 'ELEVATED TACHYCARDIA', '#f87171'); playTerminalSound('click');" style="background: rgba(248,113,113,0.1); border: 1px solid rgba(56,189,248,0.3); color: #38bdf8; font-size: 0.7 rem; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-family: 'JetBrains Mono';">WARP EXERTION</button>  
+                    </div>
+                   </div> 
+            </section>
+        </section>
+        <!-- Mission Logs Panel -->
+        <section class="glass-card">
+            <h2 class="alert-header">AASIS AUTONOMOUS LOGS</h2>
+            <div class="log-container">
+                <p class="log-row"><span>[02:14:55]</span> Comm delay with Earth: +00:04:12</p>
+                <p class="log-row"><span>[02:15:02]</span> Solar Radiation shield efficiency calibrated to 94%</p>
+                <p class="log-row"><span>[02:16:10]</span> Micro-meteoroid deflection path calculated</p>
+            </div>
+        </section>
+    ------ 4: NAVIGATION MATRIX DATA -->
+    <section class="glass-card">
+        <h2> AASIS NAVIGATION MATRIX</h2>
+        <p> Active Sector: <span id="nav-sector" class="highlight-cyan">G-249 (SOL)</span></p> 
+        <p> Warp Vector Factor: <span id="vector-data">0.00 Mach</span></p>
+        <p> Targeted Destination: <span id="nav-destination" style="color: #c084fc; font-weight: bold;">Proxima Centauri</span></p>
+        <p> Distance Remaining: <span id="nav-distance" style="color: #f3f4f6;">4.24 Light Years</span></p>
+
+        <!--- Interactive Flight Selector Deck -->
+        <div style="margin-top: 20px; padding-top: 15px; border-top: 1px dashed rgba(255,255,255,0.1);">
+            <p style="font-size: 0.75rem; color: #6b7280; margin-bottom: 8px;">[ TARGET SECTOR VECTOR ] </p>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">\
+                <button onclick="setTargetSector('Proxima Centauri', 'G-249', '4.24LY'); playTerminalSound('click');" style="background: rgba(56,189,248,0.1); border: 1px solid rgba(56, 189, 248,0.3); color: #38bdf8; font-size: 0.7rem; padding: 4px, 8px; border-radius: 4px; cursor: pointer; font-family: 'JetBrains Mono';">PROXIMA</button>
+                <button onclick="setTargetSector('Kepler-186f', 'K-982', '582.0 LY'); playTerminalSound('click');" style="background: rgba(56,189,248,0.1); border: 1px solid rgba(56, 189, 248,0.3); color: #38bdf8; font-size: 0.7rem; padding: 4px, 8px; border-radius: 4px; cursor: pointer; font-family: 'JetBrains Mono';">KEPLER</button>
+                <button onclick="setTargetSector('Gliese 581g', 'GL-581', '20.3 LY'); playTerminalSound('click');" style="background: rgba(56,189,248,0.1); border: 1px solid rgba(56, 189, 248,0.3); color: #38bdf8; font-size: 0.7 rem; padding: 4px, 8px; border-radius: 4px; cursor: pointer; font-family: 'JetBrains Mono';">GLIESE</button>
+      
+                </div>
+             </div>
+      </section>
+     </main> 
+       <footer class="control-deck" style="margin-top: 30px; text-align: center; width: 100%;">
+           <button onclick="document.getElementById('ship-status').innerHTML = ' Status: HYPER WARP ACTIVE'; document.getElementById('ship-status').style.color = '#c084fc'; document.getElementById('vector-data').innerHTML = '9.98 Mach [MAX]'; document.getElementById('vector-data').style.color = '#34d399';" style="background: #c084fc; border: none; color: #030712; padding: 14px 28px; font-family: 'JetBrains Mono', monospace; border-radius: 8px; cursor: pointer; font-weight: bold; box-shadow: 0 0 15px rgba(192, 132, 252, 0.4); font-size: 0.9rem;"></button>
+       </footer>
+        <div style="margin: 40px auto 20px auto; text-align: center; font-family: 'JetBrains Mono', sans-serif; max-width: 400px;">
+        <div style="display: inline-flex; align-items: center; gap: 10px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255,255,255, 0.08); padding: 6px 14px; border-radius: 100px; backdrop-filter: blur(4px); box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
+            <span style="font-size: 0.75rem; color: #9ca3af; font-weight: 300; letter-spacing: -0.2px;">madeby</span>
+            <span style="font-size: 0.75rem; color: #ffffff; font-weight: 600; letter-spacing: -0.2px; background: linear-gradient(to right, #38bdf8, #c084fc); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;">vito</span>
+            <span style="width: 1px; height: 12px; background:rgba(255,255,255,0.15);"></span>
+            <span style="font-size: 0.65rem; color: #34d399; font-weight: 500; letter-spacing: 0.5px; background: rgba(52, 211, 153, 0.1); padding: 2px 8px; border-radius: 20px; border: 1px solid rgba(52, 211, 153, 0.2);">project genesis v1.0</span>
+            </div>
+            <p style="margin: 8px 0 0 0; font-size: 0.65rem; color: #4b5563; font-weight: 400; letter-spacing: -0.1px;">my first official deployment</p>
+            </div>
+
+        </div>
+    <script src="https://cloudflare.com"></script>
+        <script>
+            // 1. Mouse Movement Spotlight Tracker
+            const glow = document.getElementById('mouseGlow');
+    
+            window.addEventListener('mousemove', (e) => {
+                glow.style.left = e.clientX + 'px';
+                glow.style.top = e.clientY + 'px';
+            });
+            // 2. Real-Time Ship Clock Synchronizer 
+            function updateClock() {
+                let now = new Date();
+                document.getElementById("ship-clock").innerHTML = "MISSION TIME " + now.toLocaleTimeString();
+            }
+            setInterval(updateClock, 1000);
+            updateClock();
+            // 3. Engine Function Command Logic 
+            function engageWarp() {
+               // a. direct status text check
+                const statusText = document.getElementById("ship-status");
+                if (systemText) {
+                statusText.innerHTML = "Status: Deep Space Cruise (WARP EN ROUTE)";
+                statusText.style.color = "#c084fc";
+            }
+                //B. direct card border check
+                const systemCard = document.getElementById("systemCard");
+                if (systemCard) {
+                systemCard.style.borderColor = "rgba(192, 132, 252, 0.6)";
+                systemCard.style.boxShadow = "0 0 25px rgba(192, 132, 252, 0.6)";
+             }
+                // C. Direct Speed metric check
+                const vectorText = document.getElementById("vector-data");
+                if (vectorText) {
+                    vectorText.innerHTML = "9.98 Mach [MAX]";
+                    vectorText.style.color = "#34d399";
+                    vectorText.style.fontWeight = "bold" 
+                systemCard.style.borderColor = "rgba(192, 132, 252, 0.6)";
+             }
+        }
+             document.querySelector('.action-btn').addEventListener('click', engageWarp);
+             // 4. AASIS INTERACTIVE FLIGHT DESTINATION TRACKER
+             function setTargetSector(destinationName, sectorId, distanceRemaining) {
+             // A. Updates the dynamic sector name field text strings
+             const destinationField = document.getElementById("nav-destination");
+             if (destinationField) {
+             destinationField.innerHTML = destinationName;
+             }
+             
+             // B. Updates the active quadrants coordinate tracking grid
+             const sectorField = document.getElementById("nav-sector");
+             if (sectorField) {
+             sectorField.innerHTML = sectorId;
+             }
+
+             // C. Re-Calculates and Displays the cosmic distance (Light Years) telemetry numbers 
+             const distanceField = document.getElementById("nav-distance");
+             if (distanceField) {
+                 distanceField.innerHTML = distanceRemaining 
+             }
+             // D. Logs an entry dynamically directly into third card (AUTONOMOUS LOGS)
+             const logBox = document.getElementById("log-box");
+             if (logBox) {
+                let now = new Date();
+                let timestamp = now.toLocaleTimeString();
+                // Create's a new Terminal Log line and injects it right into the top of the box layout
+                logBox.innerHTML += `<p class="log-row" style="color: #38bdf8 !important;><span>[${timestamp}]</span> Navigation Course Locked: Vectoring ${destinationName}</p>`
+                } 
+        } 
+                //// 5. AASIS INTERACTIVE CREW VITALS SIMULATOR ---///
+                function setVitalState(stressVal, sleepVal, heartState, heartColor) {
+                // A. Updates the Stress values (telemetry)
+                const stressField = document.getElementById("vital-stress");
+                if (stressField) {
+                  stressField.innerHTML = stressVal;
+                }  
+
+                // B. Updates resting sleep REM (telemetry)
+                const sleepField = document.getElementById("vital-sleep");
+                if (sleepField) {
+                sleepField.innerHTML = sleepVal;
+                }
+
+                // C. Updates the heart rate descriptors and dynamic status color (variables)
+                const heartField = document.getElementById("vital-heart")
+                if (heartField) {
+                heartField.innerHTML = heartState;
+                heartField.style.color = heartColor;
+                }
+
+                // D. Automatically pushes alert right into logs box!
+                const logBox = document.getElementById("logbox");
+                if (logBox) {
+                  let now = new Date();
+                  let timestamp = now.toLocaleTimeString();
+                  logBox.innerHTML += `<p class="log-row" style="color: ${heartColor} !important;"><span>[${timestamp}]</span> Biometric Update: Commander status to ${heartstate}</p>`;
+                 }        
+        }
+                 // 6. AUDIO FREQUENCY SYNTHESIZER
+                 function playTerminalSound(type) {
+                 //// Access of browser's native hardware audio card controller
+                 const AudioContext = window.AudioContext || window.webkitAudioContext;
+                 if (!AudioContext) return;
+                 
+                 const ctx = new AudioContext();
+                 const oscillator = ctx.createOscillator();
+                 const gainNode = ctx.createGain();
+                 
+                 oscillator.connect(gainNode);
+                 gainNode.connect(ctx.destination);
+                 
+                 if (type === 'click') {
+                 // High Frequency blip sound effect
+                 oscillator.type = 'sine';
+                 oscillator.frequency.setValueAtTime(1200, ctx.currentTime);
+                 gainNode.gain.setValueAtTime(0.05, ctx.currentTime) // Low volume up/burst hehe
+                 gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
+                 oscillator.start(ctx.currentTime);
+                 oscillator.stop(ctx.currentTime + 0.25);
+          }  else if (type === 'alert') {
+                // Sweeping Emergency Hazard radar beep tone *beep beep beep haha*
+                oscillator.type= 'sawtooth';
+                oscillator.frequency.setValueAtTime(440, ctx.currentTime);
+                oscillator.frequency.linearRampToValueAtTime(880, ctx.currentTime + 0.2);
+                gainNode.gain.setValueAtTime(0.03, ctx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+                oscillator.start(ctx.currentTime);
+                oscillator.stop(ctx.currentTime + 0.25);
+                 }
+                }
+        
+    
+        
+                 
+        </script>
+    </body>
+    </html> 
